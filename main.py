@@ -1,6 +1,6 @@
 import socket, sys, select
 from thread import *
-__port__ = 10013
+__port__ = 10015
 max_buff_size = 8192
 time_out_max = 100
 
@@ -15,21 +15,25 @@ time_out_max = 100
 
 
 def receive_server_request(data):
-    temp = data.split()
-    print(temp)
-    if temp[0] == 'CONNECT':
-        print "CONNECT request"
-        webaddress = (temp[1].split(':'))[0]
-        webport = (temp[1].split(':'))[1]
-        proxy_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        proxy_server_socket.connect((webaddress, int(webport)))
-        print "> Connection with web server established!"
-
-    if temp[0] == 'GET':
-        #conn.send("HTTP/1.1 200 OK\n"+"Content-Type: text/html\n" +"\n" +"<html><body><h1>It works!</h1></body></html>\n")
+    try:
+        temp = data.split()
         proxy_server_socket = None
-    print(data)
-    return proxy_server_socket
+        print(temp)
+        if temp[0] == 'CONNECT':
+            print "CONNECT request"
+            webaddress = (temp[1].split(':'))[0]
+            webport = (temp[1].split(':'))[1]
+            proxy_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            proxy_server_socket.connect((webaddress, int(webport)))
+            print "> Connection with web server established!"
+
+        if temp[0] == 'GET':
+            #conn.send("HTTP/1.1 200 OK\n"+"Content-Type: text/html\n" +"\n" +"<html><body><h1>It works!</h1></body></html>\n")
+            print "GET req"
+        print(data)
+        return proxy_server_socket
+    except Exception,e:
+        print "Error parsing client request."
 
 
 def client_receiver(host, port):
@@ -100,8 +104,7 @@ def https_bridge(proxy_client_socket, proxy_server_socket):
     while 1:
         num_of_chats += 1
         (recv, outready, err) = select.select(sockets, [], [3])
-        print recv
-        print outready
+
         if err:
             break
         if recv:
@@ -115,7 +118,7 @@ def https_bridge(proxy_client_socket, proxy_server_socket):
                     transmitter = proxy_client_socket
                 if data:
                     transmitter.send(data)
-                    # print(data)
+                    print "> Data START: "+ data+ " :END"
                     num_of_chats = 0
         if num_of_chats == time_out_max:
             break
